@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance api JS</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                return JSON.stringify(data, null, 2);
+            } catch (error) {
+                return `Error: ${error.message}`;
+            }
+        }
+
+        async function getCurrentAveragePrice() {
+            const result = await fetchData('https://api.binance.com/api/v3/avgPrice?symbol=BTCUSDT');
+            document.getElementById('output').textContent = result;
+        }
+
+        async function getDepth() {
+            const result = await fetchData('https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=5');
+            document.getElementById('output').textContent = result;
+        }
+
+        async function getExchangeInfo() {
+            const result = await fetchData('https://api.binance.com/api/v3/exchangeInfo');
+            document.getElementById('output').textContent = result;
+        }
+
+        async function getKLineData() {
+            const result = await fetchData('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=5');
+            document.getElementById('output').textContent = result;
+        }
+
+        async function getRecentTrades() {
+            const result = await fetchData('https://api.binance.com/api/v3/trades?symbol=BTCUSDT&limit=5');
+            document.getElementById('output').textContent = result;
+        }
+
+        async function getServerTime() {
+            const result = await fetchData('https://api.binance.com/api/v3/time');
+            document.getElementById('output').textContent = result;
+        }
+
+        async function getSystemStatus() {
+            const result = await fetchData('https://api.binance.com/sapi/v1/system/status');
+            document.getElementById('output').textContent = result;
+        }
+    </script>
+    <script>
+         async function fetchKLineData() {
+            const url = 'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=500';
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                return data.map(entry => ({
+                    time: new Date(entry[0]).toLocaleDateString(),
+                    close: parseFloat(entry[4])
+                }));
+            } catch (error) {
+                console.error('Error: ', error);
+                return [];
+            }
+        }
+
+        async function createChart() {
+            const klineData = await fetchKLineData();
+            const labels = klineData.map(entry => entry.time);
+            const closePrices = klineData.map(entry => entry.close);
+
+            const ctx = document.getElementById('Chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'BTC/USDT Close',
+                        data: closePrices,
+                        borderColor: 'rgba(0, 0, 0, 1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        pointHoverRadius: 0
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Close Price (USDT)'
+                            }
+                        }
+                    },
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    }
+                }
+            });
+        }
+
+        window.onload = createChart;
+    </script>
+    
+</head>
+<body>
+    <div style="margin: auto; width: 50%;">
+        <h1>Binance API Javascript Examples By Emincan Ünal</h1>
+        <ul>
+            <li> <button onclick="getCurrentAveragePrice()">Get Current Average Price</button></li>
+            <li> <button onclick="getDepth()">Get Depth</button></li>
+            <li> <button onclick="getExchangeInfo()">Get Exchange Info</button></li>
+            <li> <button onclick="getKLineData()">Get K-Line Data</button></li>
+            <li> <button onclick="getRecentTrades()">Get Recent Trades</button></li>
+            <li> <button onclick="getServerTime()">Get Server Time</button></li>
+            <li> <button onclick="getSystemStatus()">Get System Status</button></li>
+        </ul>
+        <h2>Output:</h2>
+    <pre id="output" style="background-color: #f4f4f4; padding: 10px; border: 1px solid #ccc;"></pre>
+    </div>
+
+    <div style="margin: auto; width: 50%; margin-top: 250px;">
+        <h1>Advanced Examples (Maybe Coming soon)</h1>
+        <h2>Bitcoin Line Chart</h2>
+        <pre id="advanced" style="background-color: #f4f4f4; padding: 10px; border: 1px solid #ccc;"><canvas id="Chart" width="400" height="200"></canvas></pre>
+    </div>
+</body>
+</html>
